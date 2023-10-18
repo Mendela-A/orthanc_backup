@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Custom file ignore
+*.zip
+
 # C extensions
 *.so
 
