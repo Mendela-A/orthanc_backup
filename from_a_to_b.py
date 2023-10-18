@@ -24,6 +24,7 @@ except requests.exceptions.RequestException:
     raise SystemExit    
 else:
     #get how much file on server
+    counter = 0
     num_all_studies = len(response_src.json())
     #get file one by one
     logging.info("Connected to Server \n")
@@ -48,15 +49,8 @@ else:
         # response_src_get = requests.delete(f"{url_src}{item}/archive", auth=credentials_src)
         # logging.info(f"File {item}.zip WAS DELETED FROM SRC")
 
-
+        #Show progression
+        counter = counter+1
+        print(f'\rProgress {response_src.json().index(item)+1} from {num_all_studies}', end='', flush=True)
 finally:
     logging.info(f"Script work done")
-
-
-
-
-
-
-            # #Show progression
-            # print(f'\r{num_all_studies}', end='', flush=True)
-
