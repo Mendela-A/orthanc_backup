@@ -5,6 +5,7 @@ __pycache__/
 
 # Custom file ignore
 *.zip
+*.log
 
 # C extensions
 *.so

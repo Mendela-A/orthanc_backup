@@ -2,43 +2,61 @@ import requests
 import os
 import logging
 
-credentials=('orthanc', 'orthanc')
 
-url_from = "http://172.16.0.33:8042/studies/"
-url_to = "http://172.16.0.33:8044/instances"
+#VARS
+#Connect credential
+credentials_src=('orthanc', 'orthanc')
+credentials_dst=('orthanc', 'orthanc')
+
+url_src = "http://172.16.0.33:8042/studies/"
+url_dst = "http://172.16.0.33:8043/instances"
 
 #logging
-logging.basicConfig(level=logging.INFO, filename="log.txt", filemode="w",
+logging.basicConfig(level=logging.INFO, filename="log_.log", filemode="w",
                     format="%(asctime)s %(levelname)s %(message)s")
 
-response = requests.get(url_from, auth=credentials)
+#Program code
+try:
+    response_src = requests.get(url_src, auth=credentials_src)
+    response_dst = requests.get(url_dst, auth=credentials_dst)
+except requests.exceptions.RequestException:
+    logging.error("Connection error, check your server or parameters")
+    raise SystemExit    
+else:
+    #get how much file on server
+    num_all_studies = len(response_src.json())
+    #get file one by one
+    logging.info("Connected to Server \n")
+    for item in response_src.json():
+        response_src_get = requests.get(f"{url_src}{item}/archive", auth=credentials_src)
+        with open(f"{item}.zip", "wb") as file:
+            file.write(response_src_get.content)
+            #Get file size
+            file_stats = os.stat(f"{item}.zip")
+            logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> down done")
 
-if response.status_code == 200:
-    logging.info("Connected to Server")
-    for item in response.json():
-        #get file one by one
-        if True:
-            response_get = requests.get(f"{url_from}{item}/archive", auth=credentials)
-            with open(f"{item}.zip", "wb") as file:
-                file.write(response_get.content)
-        else:
-            logging.error(f"{item}.zip <- Write error")
+        #Rend file
+        with open(f"{item}.zip", "rb") as file:
+            response_dst_post = requests.post(url_dst, data=file, auth=credentials_dst)  
+            logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> send done \n")
         
-        #send file
-        if True:
-            with open(f"{item}.zip", "rb") as file:
-                response_post = requests.post(url_to, data=file, auth=credentials)  
-        else:
-            logging.error(f"{item}.zip <- Send error")
-
-        #remove file
+        #Remove tmp_local file
         if os.path.exists(f"{item}.zip"):
             os.remove(f"{item}.zip")
-        else:
-            logging.error(f"File {item}.zip does not exist")
-    logging.info("Job done")
-else:
-    logging.critical("Connect not complete !!!")
+
+        #DELETE SRC FILE !!! WARNING !!! BEE CAREFULL
+        # response_src_get = requests.delete(f"{url_src}{item}/archive", auth=credentials_src)
+        # logging.info(f"File {item}.zip WAS DELETED FROM SRC")
 
 
+finally:
+    logging.info(f"Script work done")
+
+
+
+
+
+
+            # #Show progression
+            # print(f'\r{num_all_studies}', end='', flush=True)
 
