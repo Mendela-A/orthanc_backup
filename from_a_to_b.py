@@ -51,8 +51,8 @@ else:
             os.remove(f"{item}.zip")
 
         #DELETE SRC FILE !!! WARNING !!! BEE CAREFULL
-        response_src_get = requests.delete(f"{url_src}{item}", auth=credentials_src)
-        logging.info(f"File {item}.zip WAS DELETED FROM SRC\n")
+        # response_src_get = requests.delete(f"{url_src}{item}", auth=credentials_src)
+        # logging.info(f"File {item}.zip WAS DELETED FROM SRC\n")
 
         #Show progression
         counter = counter+1
