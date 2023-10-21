@@ -38,7 +38,7 @@ else:
             file_stats = os.stat(f"{item}.zip")
             logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> down done")
 
-        #Rend file
+        #Send file
         with open(f"{item}.zip", "rb") as file:
             response_dst_post = requests.post(url_dst, data=file, auth=credentials_dst)  
             logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> send done")
@@ -50,7 +50,7 @@ else:
             os.remove(f"{item}.zip")
 
         #DELETE SRC FILE !!! WARNING !!! BEE CAREFULL
-        # response_src_get = requests.delete(f"{url_src}{item}", auth=credentials_src)
+        # response_src_delete = requests.delete(f"{url_src}{item}", auth=credentials_src)
         # logging.info(f"File {item}.zip WAS DELETED FROM SRC\n")
 
         #Show progression

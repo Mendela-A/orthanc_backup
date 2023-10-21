@@ -2,19 +2,22 @@ import ntplib
 import time
 import logging
 import requests
+import os
 
 
 #VARS
 #Set period of time
-MONTH = 6
+MONTH = 8
 
-#Connect credential
-credentials=('orthanc', 'orthanc')
-url = "http://172.16.0.33:8042/studies/"
+#Connect credentials
+credentials_src=('orthanc', 'orthanc')
+url_src = "http://172.16.0.33:8042"
 
+credentials_dst=('orthanc', 'orthanc')
+url_dst = "http://172.16.0.33:8043"
 
 #logging
-logging.basicConfig(level=logging.INFO, filename="transfer_log.log", filemode="w",
+logging.basicConfig(level=logging.INFO, filename="transfer_log.log", filemode="a+",
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
@@ -47,89 +50,45 @@ def month_to_second(month=0):
 
 try:
     logging.info("Starting ... ")
-    DATA_STR = time.strftime("%Y.%m.%d", time.localtime(actual_time_from_net() - month_to_second(MONTH))) 
+    DATA_STR = time.strftime("%Y%m%d", time.localtime(actual_time_from_net() - month_to_second(MONTH)))
 except Exception:    
     logging.error("Connection error, check your server or parameters")
     raise SystemExit  
 else:
+    #Json request
     data = {
     "Level": "Study",
     "Query": {
-        "StudyDate": f"{DATA_STR}",
+        "StudyDate": f"-{DATA_STR}",
         "PatientID": "*"
-            }
+        }
     }
-    request = requests.get(url, auth=credentials, verify=False)
-    for item in request.json():
-        request1 = requests.get(f"{url}{item}", auth=credentials, verify=False)
-        print(f"{item} ---> {request1.json()['PatientMainDicomTags']['PatientName']}")
+    request_src = requests.post(f"{url_src}/tools/find", auth=credentials_src, verify=False, json=data)
+    for item in request_src.json():
+    #get file one by one
+        response_src_get = requests.get(f"{url_src}/studies/{item}/archive", auth=credentials_src)
+        with open(f"{item}.zip", "wb") as file:
+            file.write(response_src_get.content)
+            #Get file size
+            file_stats = os.stat(f"{item}.zip")
+            logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> down done")
         
+        #Send file
+        with open(f"{item}.zip", "rb") as file:
+            response_dst_post = requests.post(f"{url_dst}/instances", data=file, auth=credentials_dst)  
+            logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> send done")
+        
+        #Remove tmp_local file
+        if os.path.exists(f"{item}.zip"):
+            os.remove(f"{item}.zip")
+
+        #DELETE SRC FILE !!! WARNING !!! BEE CAREFULL
+        response_src_delete = requests.delete(f"{url_src}/studies/{item}", auth=credentials_src)
+        logging.info(f"File {item}.zip WAS DELETED FROM SRC")       
 
 
 finally:
-    logging.info("End. Scripts work done")
-
-
-
-# #x = requests.get('http://172.16.0.33:8042/studies', auth=('orthanc', 'orthanc'))
-
-# url = "http://172.16.0.33:8042/studies/923023e3-9ac5fc61-1188d4fd-34d3c6c3-516584ee/archive"
-# x = requests.get(url , auth=('orthanc', 'orthanc'))
-
-# url_arch = "http://172.16.0.33:8043/instances"
-# file_name = "image.zip"
-
-# with open("image.zip", "wb") as file:
-#         file.write(x.content)
-
-
-
-#response = requests.post(url_arch, files={'file': (file_name, open(file_name, 'rb'))}, auth=('orthanc', 'orthanc'))
-
-#with open(file_name, 'rb') as send_file:
-#    response = requests.post(url_arch, data=send_file.read(), auth=('orthanc', 'orthanc'))
-
-
-
-#print(x.json())
-
-#sent file to server
-#curl -X POST http://localhost:8042/instances --data-binary @multiple-files.zip
-
-#delete file from server
-#curl -X DELETE http://localhost:8042/instances/8e289db9-0e1437e1-3ecf395f-d8aae463-f4bb49fe
-
-
-
-# import requests
-# from urllib3.exceptions import InsecureRequestWarning
-
-# data = {
-#     "Level": "Study",
-#     "Query": {
-#         "StudyDate": "20230501",
-#         "PatientID": "*"
-#     }
-# }
+    logging.info("End. Scripts work done\n")
 
 # # Suppress the warnings from urllib3
 # requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-
-# req = requests.get('https://kt-data.crh.local/studies', auth=('KT', 'kt2022'), verify=False)
-# counter = 0
-# for item in req.json():
-#     counter = counter + 1
-# print(f'{counter} Founded studies')
-
-
-
-# def finder():
-#     req_ = requests.post('https://kt-data.crh.local/tools/find', auth=('KT', 'kt2022'), verify=False, json=data)
-#     count = 0
-#     for item in req_.json():
-#         count = count+1
-#         #print(item)
-
-#     print(f'Founded {count} Studies - functions info')
-
-# finder()
