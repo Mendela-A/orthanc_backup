@@ -11,12 +11,15 @@ mb_counter = 0
 credentials_src=('orthanc', 'orthanc')
 credentials_dst=('orthanc', 'orthanc')
 
-url_src = "http://172.16.0.33:8042/studies/"
-url_dst = "http://172.16.0.33:8043/instances"
+url_src = "http://172.16.0.33:8043/studies/"
+url_dst = "http://172.16.0.33:8042/instances"
 
 #logging
 logging.basicConfig(level=logging.INFO, filename="log_.log", filemode="a+",
                     format="%(asctime)s %(levelname)s %(message)s")
+
+# # Suppress the warnings from urllib3
+# requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 #Program code
 try:
@@ -29,7 +32,7 @@ else:
     #get how much file on server
     num_all_studies = len(response_src.json())
     #get file one by one
-    logging.info("Connected to Server \n")
+    logging.info("Connected to Server")
     for item in response_src.json():
         response_src_get = requests.get(f"{url_src}{item}/archive", auth=credentials_src)
         with open(f"{item}.zip", "wb") as file:
@@ -58,5 +61,5 @@ else:
         print(f'\rProgress {response_src.json().index(item)+1} from {num_all_studies}', end='', flush=True)
 
 finally:
-    logging.info(f"Script work done, {counter} files processed, Send {mb_counter} MB")
+    logging.info(f"Script work done, {counter} files processed, Send {mb_counter} MB\n")
                

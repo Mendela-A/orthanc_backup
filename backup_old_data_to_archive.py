@@ -8,6 +8,8 @@ import os
 #VARS
 #Set period of time
 MONTH = 8
+mb_counter = 0
+counter = 0
 
 #Connect credentials
 credentials_src=('orthanc', 'orthanc')
@@ -20,6 +22,8 @@ url_dst = "http://172.16.0.33:8043"
 logging.basicConfig(level=logging.INFO, filename="transfer_log.log", filemode="a+",
                     format="%(asctime)s %(levelname)s %(message)s")
 
+# # Suppress the warnings from urllib3
+# requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 def actual_time_from_net():
     """Get actual time from internet"""
@@ -77,18 +81,19 @@ else:
         with open(f"{item}.zip", "rb") as file:
             response_dst_post = requests.post(f"{url_dst}/instances", data=file, auth=credentials_dst)  
             logging.info(f"File {item}.zip {round(file_stats.st_size/(1024*1024))}MB -> send done")
+            # MB summ
+            mb_counter = mb_counter + round(file_stats.st_size/(1024*1024))
         
         #Remove tmp_local file
         if os.path.exists(f"{item}.zip"):
             os.remove(f"{item}.zip")
 
         #DELETE SRC FILE !!! WARNING !!! BEE CAREFULL
-        response_src_delete = requests.delete(f"{url_src}/studies/{item}", auth=credentials_src)
-        logging.info(f"File {item}.zip WAS DELETED FROM SRC")       
+        # response_src_delete = requests.delete(f"{url_src}/studies/{item}", auth=credentials_src)
+        # logging.info(f"File {item}.zip WAS DELETED FROM SRC")   
 
+        #Show progression
+        counter = counter+1    
 
 finally:
-    logging.info("End. Scripts work done\n")
-
-# # Suppress the warnings from urllib3
-# requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+    logging.info(f"Script work done, {counter} files processed, Send {mb_counter} MB\n")
