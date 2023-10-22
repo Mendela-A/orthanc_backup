@@ -1,0 +1,40 @@
+version: "3"
+services:
+  web:
+    image: nginx
+    volumes:
+      - "./nginx:/etc/nginx/conf.d/"
+      - "./nginx/crt:/etc/nginx/certs"
+    ports:
+      - "443:443"
+      - "80:80"
+    restart: always
+    networks:
+      - orth
+  
+  orthanc_a:
+    image: jodogne/orthanc-plugins:1.12.1
+    container_name: orthanc_a
+      #    ports:
+      #      - "8042:8042"
+      #      - "4242:4242"
+    volumes:
+      - "./orthanc_a:/etc/orthanc"
+    restart: always
+    networks:
+      - orth
+ 
+  orthanc_b:
+    image: jodogne/orthanc-plugins:1.12.1
+    container_name: orthanc_b
+      #    ports:
+      #      - "8043:8042"
+      #      - "4243:4242"
+    volumes:
+      - "./orthanc_b:/etc/orthanc"
+    restart: always
+    networks:
+      - orth
+ 
+networks:
+  orth:
