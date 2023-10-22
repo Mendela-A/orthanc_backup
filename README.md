@@ -8,5 +8,6 @@ backup scripts
 4) mt_five_y - This scrip just delete old data and log it. Data we get from NTP.
 
 5) orthanc_lab - Is a simple lab for testing script and other staff.
-  Generera self signed sert to orthanc_lab\nginx\crt /n
+  Generera self signed sert to orthanc_lab\nginx\crt
+
   "sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt"
